@@ -1,0 +1,17 @@
+NOTICE
+
+The text archived under 80-data/public/tos.journal.edn in this repository was
+authored and published by Telefonaktiebolaget LM Ericsson and remains that company's copyright. It is
+included here for reference/analysis purposes only, with source-url and
+retrieved-at provenance recorded alongside the entry, and is not asserted as
+this project's own work.
+
+Source: https://www.ericsson.com/en/legal
+Retrieved: 2026-07-25T05:18:09Z
+
+This repository's own structure (README, blueprint.edn, journal schema, tooling)
+is licensed AGPL-3.0-or-later per LICENSE. That license does NOT extend to the
+archived third-party text itself.
+
+This project is an independent third-party archive/analysis. It is not
+affiliated with, endorsed by, or sponsored by Telefonaktiebolaget LM Ericsson.
