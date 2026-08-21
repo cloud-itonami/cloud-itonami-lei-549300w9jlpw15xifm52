@@ -1,6 +1,6 @@
 #!/usr/bin/env nbb
 ;; VENDORED from com-junkawasaki/root (scripts/lei-verify-facts.cljs), root
-;; pinned at 6846befd962542757e2decdc95895dcb78956f1b. Do not edit here.
+;; pinned at fa8883de3c791138e6e430d0f8682c6992926398. Do not edit here.
 ;;
 ;; This copy is deliberate, not an oversight. What makes this repository an
 ;; archive is that a single `git clone` of it can be checked against the live
@@ -187,12 +187,33 @@
               :securities/isin-count (get isin-page "total")
               :securities/page-size (get isin-page "perPage")
               :securities/page-count (get isin-page "lastPage")
-              :source/note (if isins-mirrored?
+              :source/note (cond
+                             ;; A measured zero, and it has to say so. On the
+                             ;; mirrored branch "each identifier is recorded
+                             ;; below" is vacuously true when there are none,
+                             ;; which leaves a reader unable to tell "GLEIF maps
+                             ;; no instruments to this entity" from "the mirror
+                             ;; step produced nothing" -- the exact ambiguity
+                             ;; this file's header promises the counts never
+                             ;; have. The direct-children count already says it;
+                             ;; this one did not until a zero actually appeared.
+                             (and isins-mirrored? (zero? (or (get isin-page "total") 0)))
+                             (str "Count of instrument identifiers GLEIF maps to this LEI, read "
+                                  "from meta.pagination.total of the cited page. It is zero: "
+                                  "GLEIF maps no instrument identifiers to this LEI. That is a "
+                                  "measured zero, not an unasked question -- the cited page was "
+                                  "fetched and reported an empty collection, so there are no "
+                                  ":fact/kind :security entities below to find. This is a "
+                                  "count, not a share count.")
+
+                             isins-mirrored?
                              (str "Count of instrument identifiers GLEIF maps to this LEI, read "
                                   "from meta.pagination.total of the cited page. The whole list "
                                   "fits in that single page, so each identifier is also recorded "
                                   "below as its own :fact/kind :security entity. This is a "
                                   "count, not a share count.")
+
+                             :else
                              (str "Count of instrument identifiers GLEIF maps to this LEI, read "
                                   "from meta.pagination.total of the cited page. The individual "
                                   "ISINs are deliberately not mirrored into this repository: at "
