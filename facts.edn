@@ -7,8 +7,13 @@
 ;;
 ;; Shape is tx-data (a vector of entity maps), so it loads with
 ;; (d/transact conn (edn/read-string (slurp "facts.edn"))) like every other EDN
-;; corpus in this workspace. :company/lei is the join key -- including on the 29
-;; :fact/kind :direct-child entities, whose LEIs join to their own records.
+;; corpus in this workspace. :company/lei is the join key.
+;;
+;; The two counts here -- :securities/isin-count and
+;; :relationship/direct-child-count -- are read from meta.pagination.total of a
+;; page this script actually fetched. Each one's :source/note says whether the
+;; list underneath it was also mirrored into this file or only counted, so a
+;; bare count is never ambiguous. A zero here is a measured zero.
 ;;
 ;; NOT on the shared query plane yet. manifest/edn-query.cljs (com-junkawasaki/root)
 ;; has loaders for blueprint.edn and 80-data/public/tos.journal.edn and none for
@@ -29,7 +34,6 @@
   :company/legal-address "Torshamnsgatan 21, 164 83, Stockholm, SE-AB, SE"
   :company/headquarters-address "Torshamnsgatan 21, 164 83, Stockholm, SE-AB, SE"
   :company/bic ["TEERSESSXXX"]
-  :company/isin ["SE0000148330" "SE0000285140" "SE0000108649" "US2948216088" "US2948215098" "SE0000108656" "SE0000148165" "SE0000805277"]
   :company/open-corporates-id "se/556016-0680"
   :company/sp-global-id ["269706"]
   :registration/initial-date "2013-09-16T14:34:00Z"
@@ -42,19 +46,22 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "Entity status and registration status are two different fields and are recorded separately: an ACTIVE company can hold a LAPSED LEI registration."}
 
  {:fact/id "gleif-isins"
   :fact/kind :securities
   :company/lei "549300W9JLPW15XIFM52"
-  :company/isin ["SE0000148330" "SE0000285140" "SE0000108649" "US2948216088" "US2948215098" "SE0000108656" "SE0000148165" "SE0000805277"]
+  :securities/isin-count 8
+  :securities/page-size 15
+  :securities/page-count 1
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/isins"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"
-  :source/note "Every ISIN GLEIF maps to this LEI. Instrument identifiers, not a share count."}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "Count of instrument identifiers GLEIF maps to this LEI, read from meta.pagination.total of the cited page. The whole list fits in that single page, so each identifier is also recorded below as its own :fact/kind :security entity. This is a count, not a share count."}
 
  {:fact/id "gleif-managing-lou"
   :fact/kind :lei-issuer
@@ -65,9 +72,24 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/managing-lou"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
   :source/note "The Local Operating Unit that issues and maintains this LEI."}
+
+ {:fact/id "gleif-lei-issuer-accreditation"
+  :fact/kind :lei-issuer-accreditation
+  :company/lei "549300W9JLPW15XIFM52"
+  :registration/managing-lou-lei "549300O897ZC5H7CY412"
+  :issuer/name "Nordic Legal Entity Identifier AB"
+  :issuer/marketing-name "NordLEI"
+  :issuer/website "https://nordlei.org"
+  :issuer/accreditation-date "2021-08-03T00:00:00+00:00"
+  :source/dataset "cloud-itonami-lei-facts"
+  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/lei-issuer"
+  :source/http-status 200
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "GLEIF's accreditation of the LOU named above, as an issuer of LEIs."}
 
  {:fact/id "gleif-registration-authority"
   :fact/kind :registration-authority
@@ -79,10 +101,11 @@
   :authority/local-organization-name "Bolagsverket"
   :authority/website "www.bolagsverket.se"
   :authority/country "Sweden"
+  :authority/jurisdiction "Sweden"
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/registration-authorities/RA000544"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
   :source/note "Resolves :company/registration-authority-id to the national register that corroborated the record."}
 
  {:fact/id "iso-20275-entity-legal-form"
@@ -92,13 +115,26 @@
   :elf/local-name "Aktiebolag"
   :elf/language "sv"
   :elf/country-code "SE"
+  :elf/subdivision-code nil
   :elf/status "ACTV"
   :elf/date-created "2017-11-30"
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/entity-legal-forms/XJHM"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
   :source/note "Resolves :company/entity-legal-form-id under ISO 20275."}
+
+ {:fact/id "gleif-direct-parent-reporting-exception"
+  :fact/kind :parent-reporting-exception
+  :company/lei "549300W9JLPW15XIFM52"
+  :relationship/exception-category "DIRECT_ACCOUNTING_CONSOLIDATION_PARENT"
+  :relationship/exception-reason "NO_KNOWN_PERSON"
+  :source/dataset "cloud-itonami-lei-facts"
+  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-parent-reporting-exception"
+  :source/http-status 200
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "Why no parent of this category is reported."}
 
  {:fact/id "gleif-ultimate-parent-reporting-exception"
   :fact/kind :parent-reporting-exception
@@ -108,9 +144,108 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/ultimate-parent-reporting-exception"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"
-  :source/note "Why no ultimate accounting consolidation parent is reported."}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "Why no parent of this category is reported."}
+
+ {:fact/id "gleif-direct-children-count"
+  :fact/kind :direct-children-summary
+  :company/lei "549300W9JLPW15XIFM52"
+  :relationship/direct-child-count 29
+  :source/dataset "cloud-itonami-lei-facts"
+  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
+  :source/http-status 200
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "How many entities GLEIF records as directly consolidated by this one, read from meta.pagination.total. Zero here is a measured zero, not an unasked question. Each child, if any, is recorded as its own :fact/kind :direct-child entity below."}
+
+ {:fact/id "gleif-isin-se0000285140"
+  :fact/kind :security
+  :company/lei "549300W9JLPW15XIFM52"
+  :securities/isin "SE0000285140"
+  :source/dataset "cloud-itonami-lei-facts"
+  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/isins"
+  :source/http-status 200
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "An instrument identifier GLEIF maps to this LEI."}
+
+ {:fact/id "gleif-isin-us2948216088"
+  :fact/kind :security
+  :company/lei "549300W9JLPW15XIFM52"
+  :securities/isin "US2948216088"
+  :source/dataset "cloud-itonami-lei-facts"
+  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/isins"
+  :source/http-status 200
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "An instrument identifier GLEIF maps to this LEI."}
+
+ {:fact/id "gleif-isin-se0000148165"
+  :fact/kind :security
+  :company/lei "549300W9JLPW15XIFM52"
+  :securities/isin "SE0000148165"
+  :source/dataset "cloud-itonami-lei-facts"
+  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/isins"
+  :source/http-status 200
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "An instrument identifier GLEIF maps to this LEI."}
+
+ {:fact/id "gleif-isin-se0000148330"
+  :fact/kind :security
+  :company/lei "549300W9JLPW15XIFM52"
+  :securities/isin "SE0000148330"
+  :source/dataset "cloud-itonami-lei-facts"
+  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/isins"
+  :source/http-status 200
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "An instrument identifier GLEIF maps to this LEI."}
+
+ {:fact/id "gleif-isin-us2948215098"
+  :fact/kind :security
+  :company/lei "549300W9JLPW15XIFM52"
+  :securities/isin "US2948215098"
+  :source/dataset "cloud-itonami-lei-facts"
+  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/isins"
+  :source/http-status 200
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "An instrument identifier GLEIF maps to this LEI."}
+
+ {:fact/id "gleif-isin-se0000108656"
+  :fact/kind :security
+  :company/lei "549300W9JLPW15XIFM52"
+  :securities/isin "SE0000108656"
+  :source/dataset "cloud-itonami-lei-facts"
+  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/isins"
+  :source/http-status 200
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "An instrument identifier GLEIF maps to this LEI."}
+
+ {:fact/id "gleif-isin-se0000108649"
+  :fact/kind :security
+  :company/lei "549300W9JLPW15XIFM52"
+  :securities/isin "SE0000108649"
+  :source/dataset "cloud-itonami-lei-facts"
+  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/isins"
+  :source/http-status 200
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "An instrument identifier GLEIF maps to this LEI."}
+
+ {:fact/id "gleif-isin-se0000805277"
+  :fact/kind :security
+  :company/lei "549300W9JLPW15XIFM52"
+  :securities/isin "SE0000805277"
+  :source/dataset "cloud-itonami-lei-facts"
+  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/isins"
+  :source/http-status 200
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"
+  :source/note "An instrument identifier GLEIF maps to this LEI."}
 
  {:fact/id "gleif-direct-child-98450057efe9d01o5335"
   :fact/kind :direct-child
@@ -123,8 +258,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-9845004996ab77e6e612"
   :fact/kind :direct-child
@@ -137,8 +272,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-894500ijm6246wrn1y26"
   :fact/kind :direct-child
@@ -151,8 +286,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-984500decd62c56d1d12"
   :fact/kind :direct-child
@@ -165,8 +300,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-529900w7n0n4wln1jy21"
   :fact/kind :direct-child
@@ -179,8 +314,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-959800wtge6vbhyh9j94"
   :fact/kind :direct-child
@@ -193,8 +328,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-54930015pbnin7yvw133"
   :fact/kind :direct-child
@@ -207,8 +342,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-335800zpvxicm92te138"
   :fact/kind :direct-child
@@ -221,8 +356,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300lx1a4evopxl533"
   :fact/kind :direct-child
@@ -235,8 +370,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300cnss98irpsqg47"
   :fact/kind :direct-child
@@ -249,8 +384,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300l24uhce7nuiq32"
   :fact/kind :direct-child
@@ -263,8 +398,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-54930026wpbixqd1es93"
   :fact/kind :direct-child
@@ -277,8 +412,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-5493007j8o34tlj2kr56"
   :fact/kind :direct-child
@@ -291,8 +426,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300xoibptukafxm51"
   :fact/kind :direct-child
@@ -305,8 +440,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300liegij699t8d23"
   :fact/kind :direct-child
@@ -319,8 +454,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=1&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-5493007keh3qxvmumb92"
   :fact/kind :direct-child
@@ -333,22 +468,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
-
- {:fact/id "gleif-direct-child-549300cz0b7czkjd2a51"
-  :fact/kind :direct-child
-  :company/lei "549300CZ0B7CZKJD2A51"
-  :company/legal-name "ERICSSON TELECOMMUNICATIONS BULGARIA EOOD"
-  :company/jurisdiction "BG"
-  :company/status "ACTIVE"
-  :relationship/kind "IS_DIRECTLY_CONSOLIDATED_BY"
-  :relationship/parent-lei "549300W9JLPW15XIFM52"
-  :source/dataset "cloud-itonami-lei-facts"
-  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
-  :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300w57utjbtja7f38"
   :fact/kind :direct-child
@@ -361,8 +482,22 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
+
+ {:fact/id "gleif-direct-child-549300cz0b7czkjd2a51"
+  :fact/kind :direct-child
+  :company/lei "549300CZ0B7CZKJD2A51"
+  :company/legal-name "ERICSSON TELECOMMUNICATIONS BULGARIA EOOD"
+  :company/jurisdiction "BG"
+  :company/status "ACTIVE"
+  :relationship/kind "IS_DIRECTLY_CONSOLIDATED_BY"
+  :relationship/parent-lei "549300W9JLPW15XIFM52"
+  :source/dataset "cloud-itonami-lei-facts"
+  :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
+  :source/http-status 200
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300s5b72y4xz8hl73"
   :fact/kind :direct-child
@@ -375,8 +510,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300e3b7px4kk47m40"
   :fact/kind :direct-child
@@ -389,8 +524,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300v47ceqj03b8q11"
   :fact/kind :direct-child
@@ -403,8 +538,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-5493007d42xkq51jk239"
   :fact/kind :direct-child
@@ -417,8 +552,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300913z2xvi2q6x31"
   :fact/kind :direct-child
@@ -431,8 +566,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-5493000vi7uyypi3ye54"
   :fact/kind :direct-child
@@ -445,8 +580,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-5493003l7decehx7un13"
   :fact/kind :direct-child
@@ -459,8 +594,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300x6hvuyqhk6fo76"
   :fact/kind :direct-child
@@ -473,8 +608,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300xtxz558vekx565"
   :fact/kind :direct-child
@@ -487,8 +622,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300gf55mlylv0i304"
   :fact/kind :direct-child
@@ -501,8 +636,8 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}
 
  {:fact/id "gleif-direct-child-549300mlh00y3bn4hd49"
   :fact/kind :direct-child
@@ -515,5 +650,5 @@
   :source/dataset "cloud-itonami-lei-facts"
   :source/url "https://api.gleif.org/api/v1/lei-records/549300W9JLPW15XIFM52/direct-children?page%5Bnumber%5D=2&page%5Bsize%5D=15"
   :source/http-status 200
-  :source/retrieved-at "2026-08-20T21:02:32.570Z"
-  :source/golden-copy-publish-date "2026-08-20T08:00:00Z"}]
+  :source/retrieved-at "2026-08-20T23:56:34.678Z"
+  :source/golden-copy-publish-date "2026-08-20T16:00:00Z"}]
