@@ -27,8 +27,8 @@ them. `facts.edn` now carries them as data, and every value in it was read out o
 a public registry response whose URL and retrieval time sit next to the value:
 
 ```
-nbb scripts/verify-facts.cljk           # check the recorded facts against the live sources
-nbb scripts/verify-facts.cljk --write   # re-fetch and rewrite facts.edn
+kbb --backend sci scripts/verify-facts.cljk           # check the recorded facts against the live sources
+kbb --backend sci scripts/verify-facts.cljk --write   # re-fetch and rewrite facts.edn
 ```
 
 Eight GLEIF endpoints back the file — the LEI record, its ISINs, its managing
