@@ -20,7 +20,7 @@
 ;;   nbb scripts/verify-facts.cljk --write   re-fetch and rewrite facts.edn
 ;;
 ;; Exit codes are three, not two, on purpose. A check that could not run must
-;; not be indistinguishable from a check that ran and found nothing (CLAUDE.md,
+;; not be indistinguishable from a check that ran and found nothing (AGENTS.md,
 ;; "検査を書く前・緑を信じる前の 5 問"):
 ;;
 ;;   0  every cited URL answered, and every recorded fact still matches
